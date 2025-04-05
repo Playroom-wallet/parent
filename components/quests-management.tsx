@@ -20,6 +20,11 @@ import {
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { useToast } from "@/hooks/use-toast"
 import { TokenIcon } from "./token-icon"
+import { abi_citrea } from "@/contracts/abis/escrow_citrea"
+import { ethers } from "ethers"
+
+type TokenType = "USDC" | "cBTC"
+type QuestStatus = "pending" | "completed" | "approved"
 
 export function QuestsManagement() {
   const [quests, setQuests] = useState([
@@ -55,7 +60,13 @@ export function QuestsManagement() {
     },
   ])
 
-  const [newQuest, setNewQuest] = useState({
+  const [newQuest, setNewQuest] = useState<{
+    title: string;
+    description: string;
+    reward: string;
+    token: TokenType;
+    assignedTo: string;
+  }>({
     title: "",
     description: "",
     reward: "",
@@ -68,7 +79,7 @@ export function QuestsManagement() {
   const [searchQuery, setSearchQuery] = useState("")
   const { toast } = useToast()
 
-  const kids = [{ id: 1, name: "leo.fam.eth" }]
+  const kids = [{ id: 1, name: "leo.fam.eth" }, { id: 2, name: "yuki.fam.eth" }]
 
   const filteredQuests = quests.filter(
     (quest) =>
@@ -80,7 +91,7 @@ export function QuestsManagement() {
   const completedQuests = filteredQuests.filter((quest) => quest.status === "completed")
   const approvedQuests = filteredQuests.filter((quest) => quest.status === "approved")
 
-  const handleAddQuest = () => {
+  const handleAddQuest = async () => {
     if (!newQuest.title || !newQuest.reward || !newQuest.assignedTo) {
       toast({
         title: "Missing information",
@@ -92,6 +103,46 @@ export function QuestsManagement() {
 
     setIsAddingQuest(true)
 
+    const accounts = await window.ethereum.request({
+      method: "eth_requestAccounts",
+    });
+    const provider = new ethers.BrowserProvider(window.ethereum);
+    const signer = await provider.getSigner();
+    const contractAddress = "0x8e178d42cf17f1879a6420608204a2c4ea159733";
+    const contractABI = abi_citrea;
+    const contract = new ethers.Contract(contractAddress, contractABI, signer);
+    const tx = await contract.deposit(
+      "0x14Ad12509618AaD0c8b3c5f68c6A22a1EB6D40fe",
+      {
+        value: ethers.parseEther("0.00000001"),
+      }
+    );
+    const receipt = await tx.wait();
+
+    console.log(receipt)
+
+    const response = await fetch(
+      "https://hhg3binjrjayrisbpvb2mypnby.multibaas.com/api/v0/chains/ethereum/addresses/ethescrow1/contracts/ethescrow/methods/deposit",
+      {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization:
+            "Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxIiwiaWF0IjoxNzQzODUyODMzLCJqdGkiOiIzMjJjNmM1NS1kZTNhLTQwZTEtOWY0ZS05N2JlNTFjMjI0Y2IifQ.3Rz-fM93xj9VB9wYQygTHmGv_BIcRPUKQ8gW--30pB4",
+        },
+        body: JSON.stringify({
+          args: ["0x14Ad12509618AaD0c8b3c5f68c6A22a1EB6D40fe"],
+          contractOverride: false,
+          from: "0xd24c95A1B843967CCc035923CA637d48Dc9c5e43",
+          signAndSubmit: true,
+          signature: "deposit(address)",
+          value: 100,
+        }),
+      }
+    );
+    const data = await response.json();
+    console.log(data);
+
     // Simulate adding a quest
     setTimeout(() => {
       const questToAdd = {
@@ -99,7 +150,7 @@ export function QuestsManagement() {
         title: newQuest.title,
         description: newQuest.description,
         reward: Number(newQuest.reward),
-        token: newQuest.token as "USDC" | "cBTC",
+        token: newQuest.token as TokenType,
         status: "pending",
         assignedTo: newQuest.assignedTo,
         createdAt: "Just now",
@@ -123,14 +174,55 @@ export function QuestsManagement() {
     }, 1500)
   }
 
-  const handleApproveQuest = (id: number) => {
-    setQuests(quests.map((quest) => (quest.id === id ? { ...quest, status: "approved" } : quest)))
+  const handleApproveQuest = async (id: number) => {
+    const accounts = await window.ethereum.request({
+      method: "eth_requestAccounts",
+    });
+    const provider = new ethers.BrowserProvider(window.ethereum);
+    const signer = await provider.getSigner();
+    const contractAddress = "0x8e178d42cf17f1879a6420608204a2c4ea159733";
+    const contractABI = abi_citrea;
+    const contract = new ethers.Contract(contractAddress, contractABI, signer);
+    const tx = await contract.withdraw(
+      ethers.parseEther("0.00000001"),
+      "0x14Ad12509618AaD0c8b3c5f68c6A22a1EB6D40fe"
+    );
+    const receipt = await tx.wait();
 
+    console.log(receipt)
+
+    //handle case to transfer money to the kid's wallet
+    //Transact on Celo
+    const response = await fetch(
+      "https://hhg3binjrjayrisbpvb2mypnby.multibaas.com/api/v0/chains/ethereum/addresses/ethescrow1/contracts/ethescrow/methods/withdraw",
+      {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization:
+            "Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxIiwiaWF0IjoxNzQzODUyODMzLCJqdGkiOiIzMjJjNmM1NS1kZTNhLTQwZTEtOWY0ZS05N2JlNTFjMjI0Y2IifQ.3Rz-fM93xj9VB9wYQygTHmGv_BIcRPUKQ8gW--30pB4",
+        },
+        body: JSON.stringify({
+          args: ["1"],
+          contractOverride: false,
+          from: "0x14Ad12509618AaD0c8b3c5f68c6A22a1EB6D40fe",
+          signAndSubmit: true,
+          signature: "withdraw(uint256)",
+        }),
+      }
+    );
+    const data = await response.json();
+    console.log(data);
+    setQuests(
+      quests.map((quest) =>
+        quest.id === id ? { ...quest, status: "approved" } : quest
+      )
+    );
     toast({
       title: "Quest approved",
       description: "The reward has been sent to the kid's wallet",
-    })
-  }
+    });
+  };
 
   const handleRejectQuest = (id: number) => {
     setQuests(quests.map((quest) => (quest.id === id ? { ...quest, status: "pending" } : quest)))
@@ -192,7 +284,10 @@ export function QuestsManagement() {
                 </div>
                 <div className="grid gap-2">
                   <Label htmlFor="quest-token">Token</Label>
-                  <Select value={newQuest.token} onValueChange={(value) => setNewQuest({ ...newQuest, token: value })}>
+                  <Select
+                    value={newQuest.token}
+                    onValueChange={(value: TokenType) => setNewQuest({ ...newQuest, token: value })}
+                  >
                     <SelectTrigger id="quest-token">
                       <SelectValue placeholder="Select token" />
                     </SelectTrigger>
@@ -216,7 +311,7 @@ export function QuestsManagement() {
               <div className="grid gap-2">
                 <Label htmlFor="quest-assigned">Assign To</Label>
                 <Select
-                  onValueChange={(value) => setNewQuest({ ...newQuest, assignedTo: value })}
+                  onValueChange={(value: string) => setNewQuest({ ...newQuest, assignedTo: value })}
                   value={newQuest.assignedTo}
                 >
                   <SelectTrigger id="quest-assigned">
@@ -266,6 +361,7 @@ export function QuestsManagement() {
           <div className="grid gap-4">
             {filteredQuests.length > 0 ? (
               filteredQuests.map((quest) => (
+                //@ts-ignore
                 <QuestCard key={quest.id} quest={quest} onApprove={handleApproveQuest} onReject={handleRejectQuest} />
               ))
             ) : (
@@ -286,6 +382,7 @@ export function QuestsManagement() {
           <div className="grid gap-4">
             {pendingQuests.length > 0 ? (
               pendingQuests.map((quest) => (
+                                //@ts-ignore
                 <QuestCard key={quest.id} quest={quest} onApprove={handleApproveQuest} onReject={handleRejectQuest} />
               ))
             ) : (
@@ -302,6 +399,7 @@ export function QuestsManagement() {
           <div className="grid gap-4">
             {completedQuests.length > 0 ? (
               completedQuests.map((quest) => (
+                                //@ts-ignore
                 <QuestCard key={quest.id} quest={quest} onApprove={handleApproveQuest} onReject={handleRejectQuest} />
               ))
             ) : (
@@ -318,6 +416,7 @@ export function QuestsManagement() {
           <div className="grid gap-4">
             {approvedQuests.length > 0 ? (
               approvedQuests.map((quest) => (
+                                //@ts-ignore
                 <QuestCard key={quest.id} quest={quest} onApprove={handleApproveQuest} onReject={handleRejectQuest} />
               ))
             ) : (
@@ -339,8 +438,8 @@ interface Quest {
   title: string
   description?: string
   reward: number
-  token: "USDC" | "cBTC"
-  status: "pending" | "completed" | "approved"
+  token: TokenType
+  status: QuestStatus
   assignedTo: string
   createdAt: string
 }

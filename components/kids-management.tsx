@@ -38,42 +38,57 @@ export function KidsManagement() {
   const [isDialogOpen, setIsDialogOpen] = useState(false)
   const { toast } = useToast()
 
-  const handleAddKid = () => {
+  const handleAddKid = async () => {
     if (!newKidName) {
       toast({
         title: "Name required",
         description: "Please enter a name for the kid",
         variant: "destructive",
-      })
-      return
+      });
+      return;
+    }
+    setIsAddingKid(true);
+    // Simulate adding a kid
+    const response = await fetch("/create-kid", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({ name: newKidName }),
+    });
+    const data = await response.json();
+    if (!data.success) {
+      toast({
+        title: "Error",
+        description: "Failed to create kid account",
+        variant: "destructive",
+      });
+      setIsAddingKid(false);
+      return;
     }
 
-    setIsAddingKid(true)
+    console.log(data)
 
-    // Simulate adding a kid
-    setTimeout(() => {
-      const newKid = {
-        id: kids.length + 1,
-        name: newKidName,
-        fullName: `${newKidName}.fam.eth`,
-        avatar: "👧",
-        walletAddress: "0xefgh...5678",
-        completedQuests: 0,
-        totalQuests: 0,
-        balance: 0,
-      }
-
-      setKids([...kids, newKid])
-      setNewKidName("")
-      setIsAddingKid(false)
-      setIsDialogOpen(false)
-
-      toast({
-        title: "Kid added!",
-        description: `Successfully created ${newKid.fullName}`,
-      })
-    }, 1500)
-  }
+    const newKid = {
+      id: kids.length + 1,
+      name: newKidName,
+      fullName: `${newKidName}.fam.eth`,
+      avatar: ":girl:",
+      walletAddress:
+        data.address.substring(0, 6) + "..." + data.address.slice(-4),
+      completedQuests: 0,
+      totalQuests: 0,
+      balance: 0,
+    };
+    setKids([...kids, newKid]);
+    setNewKidName("");
+    setIsAddingKid(false);
+    setIsDialogOpen(false);
+    toast({
+      title: "Kid added!",
+      description: `Successfully created ${newKid.fullName}`,
+    });
+  };
 
   const handleDeleteKid = (id: number) => {
     setKids(kids.filter((kid) => kid.id !== id))

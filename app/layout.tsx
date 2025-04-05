@@ -43,18 +43,20 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en" suppressHydrationWarning>
+       <body className={inter.className}>
       <WagmiProvider config={config}>
       <QueryClientProvider client={queryClient}>
       <RainbowKitProvider>
-      <body className={inter.className}>
+     
         <ThemeProvider attribute="class" defaultTheme="light" enableSystem disableTransitionOnChange>
           <SidebarProvider>{children}</SidebarProvider>
           <Toaster />
         </ThemeProvider>
-      </body>
+    
       </RainbowKitProvider>
       </QueryClientProvider>
     </WagmiProvider>
+    </body>
     </html>
   )
 }
