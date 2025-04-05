@@ -7,6 +7,7 @@ import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card"
 import { Progress } from "@/components/ui/progress"
 import { DeployRegistrar } from "@/components/deploy-registrar"
+import { TokenIcon } from "./token-icon"
 
 export function ParentDashboard() {
   const [isRegistrarDeployed, setIsRegistrarDeployed] = useState(false)
@@ -17,6 +18,7 @@ export function ParentDashboard() {
       id: 1,
       title: "Help mom cook",
       reward: 5,
+      token: "USDC",
       status: "pending",
       assignedTo: "leo.fam.eth",
       createdAt: "2 days ago",
@@ -25,9 +27,19 @@ export function ParentDashboard() {
       id: 2,
       title: "Clean your room",
       reward: 3,
+      token: "USDC",
       status: "completed",
       assignedTo: "leo.fam.eth",
       createdAt: "1 week ago",
+    },
+    {
+      id: 3,
+      title: "Take out the trash",
+      reward: 0.001,
+      token: "cBTC",
+      status: "approved",
+      assignedTo: "leo.fam.eth",
+      createdAt: "3 days ago",
     },
   ])
 
@@ -180,7 +192,10 @@ export function ParentDashboard() {
                       </div>
                     </div>
                     <div className="flex items-center">
-                      <div className="mr-4 text-sm font-medium">{quest.reward} USDC</div>
+                      <div className="mr-4 text-sm font-medium flex items-center">
+                        <TokenIcon token={quest.token as "USDC" | "cBTC"} className="mr-1" />
+                        {quest.reward} {quest.token}
+                      </div>
                       <div
                         className={`px-2 py-1 rounded-full text-xs ${
                           quest.status === "completed"

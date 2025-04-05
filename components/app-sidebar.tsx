@@ -23,13 +23,8 @@ export function AppSidebar() {
 
   return (
     <Sidebar>
-      <SidebarHeader className="flex items-center justify-center py-4">
-        <div className="flex items-center space-x-2">
-          <div className="rounded-full bg-pink-500 p-1.5">
-            <span className="text-white text-xl">🐣</span>
-          </div>
-          <span className="font-bold text-lg">Playroom</span>
-        </div>
+      <SidebarHeader className="flex items-center justify-center py-8">
+        <img src="/images/playroom_logo.svg" alt="Playroom Logo" className="h-32 w-32" />
       </SidebarHeader>
       <SidebarContent>
         <SidebarMenu>

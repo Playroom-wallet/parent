@@ -19,6 +19,7 @@ import {
 } from "@/components/ui/dialog"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { useToast } from "@/hooks/use-toast"
+import { TokenIcon } from "./token-icon"
 
 export function QuestsManagement() {
   const [quests, setQuests] = useState([
@@ -27,6 +28,7 @@ export function QuestsManagement() {
       title: "Help mom cook",
       description: "Help prepare dinner for the family",
       reward: 5,
+      token: "USDC",
       status: "pending",
       assignedTo: "leo.fam.eth",
       createdAt: "2 days ago",
@@ -36,6 +38,7 @@ export function QuestsManagement() {
       title: "Clean your room",
       description: "Make your bed and organize your toys",
       reward: 3,
+      token: "USDC",
       status: "completed",
       assignedTo: "leo.fam.eth",
       createdAt: "1 week ago",
@@ -44,7 +47,8 @@ export function QuestsManagement() {
       id: 3,
       title: "Take out the trash",
       description: "Empty all trash bins and take them to the curb",
-      reward: 2,
+      reward: 0.001,
+      token: "cBTC",
       status: "approved",
       assignedTo: "leo.fam.eth",
       createdAt: "3 days ago",
@@ -55,6 +59,7 @@ export function QuestsManagement() {
     title: "",
     description: "",
     reward: "",
+    token: "USDC",
     assignedTo: "",
   })
 
@@ -94,6 +99,7 @@ export function QuestsManagement() {
         title: newQuest.title,
         description: newQuest.description,
         reward: Number(newQuest.reward),
+        token: newQuest.token as "USDC" | "cBTC",
         status: "pending",
         assignedTo: newQuest.assignedTo,
         createdAt: "Just now",
@@ -104,6 +110,7 @@ export function QuestsManagement() {
         title: "",
         description: "",
         reward: "",
+        token: "USDC",
         assignedTo: "",
       })
       setIsAddingQuest(false)
@@ -172,15 +179,39 @@ export function QuestsManagement() {
                   onChange={(e) => setNewQuest({ ...newQuest, description: e.target.value })}
                 />
               </div>
-              <div className="grid gap-2">
-                <Label htmlFor="quest-reward">Reward (USDC)</Label>
-                <Input
-                  id="quest-reward"
-                  type="number"
-                  placeholder="e.g., 5"
-                  value={newQuest.reward}
-                  onChange={(e) => setNewQuest({ ...newQuest, reward: e.target.value })}
-                />
+              <div className="grid grid-cols-2 gap-4">
+                <div className="grid gap-2">
+                  <Label htmlFor="quest-reward">Reward</Label>
+                  <Input
+                    id="quest-reward"
+                    type="number"
+                    placeholder="e.g., 5"
+                    value={newQuest.reward}
+                    onChange={(e) => setNewQuest({ ...newQuest, reward: e.target.value })}
+                  />
+                </div>
+                <div className="grid gap-2">
+                  <Label htmlFor="quest-token">Token</Label>
+                  <Select value={newQuest.token} onValueChange={(value) => setNewQuest({ ...newQuest, token: value })}>
+                    <SelectTrigger id="quest-token">
+                      <SelectValue placeholder="Select token" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="USDC" className="flex items-center">
+                        <div className="flex items-center">
+                          <TokenIcon token="USDC" className="mr-2" />
+                          USDC
+                        </div>
+                      </SelectItem>
+                      <SelectItem value="cBTC">
+                        <div className="flex items-center">
+                          <TokenIcon token="cBTC" className="mr-2" />
+                          cBTC
+                        </div>
+                      </SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
               </div>
               <div className="grid gap-2">
                 <Label htmlFor="quest-assigned">Assign To</Label>
@@ -308,6 +339,7 @@ interface Quest {
   title: string
   description?: string
   reward: number
+  token: "USDC" | "cBTC"
   status: "pending" | "completed" | "approved"
   assignedTo: string
   createdAt: string
@@ -334,8 +366,18 @@ function QuestCard({ quest, onApprove, onReject }: QuestCardProps) {
             </div>
           </div>
           <div className="flex items-center space-x-2">
-            <div className="font-medium text-sm bg-green-50 text-green-700 px-2 py-1 rounded-md">
-              {quest.reward} USDC
+            <div className="font-medium text-sm flex items-center bg-green-50 text-green-700 px-2 py-1 rounded-md">
+              {quest.token === "cBTC" ? (
+                <>
+                  <TokenIcon token="cBTC" className="mr-1" />
+                  {quest.reward} cBTC
+                </>
+              ) : (
+                <>
+                  <TokenIcon token="USDC" className="mr-1" />
+                  {quest.reward} USDC
+                </>
+              )}
             </div>
             <div
               className={`px-2 py-1 rounded-md text-xs font-medium ${

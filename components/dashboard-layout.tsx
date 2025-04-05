@@ -10,7 +10,7 @@ export function DashboardLayout({ children }: { children: ReactNode }) {
       <AppSidebar />
       <div className="flex-1 p-6">
         <header className="flex justify-between items-center mb-8">
-          <h1 className="text-2xl font-bold">Playroom</h1>
+          <img src="/images/playroom_logo.svg" alt="Playroom Logo" className="h-24 w-24" />
           <WalletConnect />
         </header>
         <main>{children}</main>
